@@ -8,14 +8,25 @@
         <li class="list-group-item">
           <a href="/messages/{{ message.id }}" class="message-link"/>
 
-          <a href="/users/{{ user.id }}">
-            <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
+          <a href="/users/{{ message.user.id }}">
+            <img src="{{ message.user.image_url }}" alt="user image" class="timeline-image">
           </a>
 
           <div class="message-area">
-            <a href="/users/{{ user.id }}">@{{ user.username }}</a>
+            <a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a>
             <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
             <p>{{ message.text }}</p>
+            
+            <form method="POST" action="{{ url_for('toggle_like', message_id=message.id) }}" id="messages-form">
+              <button class="btn btn-sm'}}">
+                {% if g.user and message.is_liked_by(g.user) %}
+                  <span style="color: Crimson; font-size: 20px;" ><i class="fas fa-heart"></i></span>
+                {% else %}
+                  <span style="color: Gray; font-size: 20px;"><i class="far fa-heart"></i></span>
+                {% endif %}
+              </button>
+            </form>
+              
           </div>
         </li>
 

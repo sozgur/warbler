@@ -108,7 +108,8 @@ class User(db.Model):
 
     likes = db.relationship(
         'Message',
-        secondary="likes"
+        secondary="likes",
+        backref="liked_users"
     )
 
     def __repr__(self):
@@ -192,6 +193,16 @@ class Message(db.Model):
         db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False,
     )
+
+    def is_liked_by(self, user):
+        """Is this message liked by the specific user"""
+
+        if self in user.likes:
+            return True
+            
+        return False
+
+
 
 
 def connect_db(app):

@@ -257,6 +257,40 @@ def delete_user():
     return redirect("/signup")
 
 
+@app.route("/users/toggle_like/<int:message_id>", methods=["POST"])
+def toggle_like(message_id):
+    """Like message by current user"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/login")
+
+    msg = Message.query.get_or_404(message_id)
+    
+    if msg.is_liked_by(g.user):
+        g.user.likes.remove(msg)
+    else:
+        g.user.likes.append(msg)
+
+    db.session.commit()
+
+    return redirect("/")
+
+@app.route("/users/<int:user_id>/likes")
+def show_liked_messages(user_id):
+    """Show user's liked message"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    messages = user.likes
+
+    return render_template('users/show.html', user=user, messages=messages)
+
+
+
 ##############################################################################
 # Messages routes:
 
@@ -306,6 +340,7 @@ def messages_destroy(message_id):
     return redirect(f"/users/{g.user.id}")
 
 
+
 ##############################################################################
 # Homepage and error pages
 
@@ -333,6 +368,14 @@ def homepage():
 
     else:
         return render_template('home-anon.html')
+
+
+#### if page not found ####
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """404 not found page"""
+    return render_template('404.html'), 404
 
 
 ##############################################################################
