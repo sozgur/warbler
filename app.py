@@ -1,10 +1,10 @@
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
 from models import db, connect_db, User, Message, Likes
 
 CURR_USER_KEY = "curr_user"
@@ -18,7 +18,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
@@ -113,7 +113,9 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    # IMPLEMENT THIS
+    do_logout()
+    flash("You have successfully loged out.", "success")
+    return redirect(url_for("login"))
 
 
 ##############################################################################
@@ -210,8 +212,30 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
+    current_user = g.user
 
-    # IMPLEMENT THIS
+    if not current_user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+  
+    form = UserEditForm(obj=current_user)
+    
+    if form.validate_on_submit():
+        if User.authenticate(current_user.username, form.password.data):
+            current_user.username = form.username.data
+            current_user.email = form.email.data
+            current_user.image_url = form.image_url.data or "/static/images/default-pic.png"
+            current_user.header_image_url = form.header_image_url or "/static/images/warbler-hero.jpg"
+            current_user.bio = form.bio.data
+            current_user.location = form.location.data
+
+            db.session.commit()
+            return redirect(f"/users/{current_user.id}")
+
+        flash("Wrong password, please try again.", 'danger')
+
+    return render_template("users/edit.html", form=form, user_id=current_user.id)
+
 
 
 @app.route('/users/delete', methods=["POST"])
