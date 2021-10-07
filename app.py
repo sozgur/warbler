@@ -28,7 +28,7 @@ connect_db(app)
 ##############################################################################
 # User signup/login/logout
 
-
+#Register a function to run before each request.
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
@@ -104,7 +104,7 @@ def login():
             flash(f"Hello, {user.username}!", "success")
             return redirect("/")
 
-        flash("Invalid credentials.", 'danger')
+        flash("Invalid username or password.", 'danger')
 
     return render_template('users/login.html', form=form)
 
@@ -114,6 +114,7 @@ def logout():
     """Handle logout of user."""
 
     do_logout()
+
     flash("You have successfully loged out.", "success")
     return redirect(url_for("login"))
 
@@ -187,9 +188,11 @@ def add_follow(follow_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.append(followed_user)
-    db.session.commit()
+    # ignore current user follow itself.    
+    if g.user.id != follow_id: 
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.append(followed_user)
+        db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -225,7 +228,7 @@ def profile():
             current_user.username = form.username.data
             current_user.email = form.email.data
             current_user.image_url = form.image_url.data or "/static/images/default-pic.png"
-            current_user.header_image_url = form.header_image_url or "/static/images/warbler-hero.jpg"
+            current_user.header_image_url = form.header_image_url.data or "/static/images/warbler-hero.jpg"
             current_user.bio = form.bio.data
             current_user.location = form.location.data
 
@@ -314,10 +317,14 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-
-    if g.user:
+    current_user = g.user
+    if current_user:
+        #user can show only following and own message
+        user_ids = [u.id for u in current_user.following]
+        user_ids.append(current_user.id)
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(user_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())

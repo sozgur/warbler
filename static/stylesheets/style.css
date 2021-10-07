@@ -212,6 +212,12 @@ nav + .container {
   right: 50%;
 }
 
+.header-image {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
 .row.full-width {
   background-color: #fff;
   margin-top: -80px;

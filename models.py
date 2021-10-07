@@ -56,13 +56,13 @@ class User(db.Model):
     )
 
     email = db.Column(
-        db.Text,
+        db.String(50),
         nullable=False,
         unique=True,
     )
 
     username = db.Column(
-        db.Text,
+        db.String(40),
         nullable=False,
         unique=True,
     )

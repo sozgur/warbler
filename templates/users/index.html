@@ -21,10 +21,9 @@
                       <p>@{{ user.username }}</p>
                     </a>
 
-                    {% if g.user %}
+                    {% if g.user and g.user.id != user.id %}
                       {% if g.user.is_following(user) %}
-                        <form method="POST">
-                              action="/users/stop-following/{{ user.id }}">
+                        <form method="POST" action="/users/stop-following/{{ user.id }}">
                           <button class="btn btn-primary btn-sm">Unfollow</button>
                         </form>
                       {% else %}
@@ -36,7 +35,10 @@
                     {% endif %}
 
                   </div>
-                  <p class="card-bio">BIO HERE</p>
+                  {% if user.bio %}
+                    <p class="card-bio">{{user.bio}}</p>
+                  {% endif %}
+                  
                 </div>
               </div>
             </div>
