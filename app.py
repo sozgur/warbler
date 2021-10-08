@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g, url_for
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for, jsonify
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
@@ -266,7 +266,7 @@ def toggle_like(message_id):
         return redirect("/login")
 
     msg = Message.query.get_or_404(message_id)
-    
+
     if msg.is_liked_by(g.user):
         g.user.likes.remove(msg)
     else:
@@ -274,7 +274,7 @@ def toggle_like(message_id):
 
     db.session.commit()
 
-    return redirect("/")
+    return jsonify({'total-likes': len(g.user.likes)})
 
 @app.route("/users/<int:user_id>/likes")
 def show_liked_messages(user_id):
